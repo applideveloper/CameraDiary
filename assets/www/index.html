@@ -1,0 +1,48 @@
+<!DOCTYPE html>  
+<html><head>
+<meta charset="utf-8">
+<script type="text/javascript" src="jsWaffle.js"></script>
+<script type="text/javascript">
+var savedir = "/sdcard/CameraDiary/"; // 写真の保存先
+droid.mkdir(savedir);
+function takePicture() { // 写真を撮影する
+	// ファイル名を決める
+	var d = new Date();
+	var fname = savedir + (d.getFullYear()) + "-" + 
+		(d.getMonth()+1) + "-" + (d.getDate()) + "_" +
+		(d.getHours() + "-" + (d.getMinutes())) + "-" +
+		(d.getSeconds()) + ".jpeg";
+	// カメラ起動
+	droid.startIntentForResult(
+		"camera:" + fname, 
+		function(code){
+			if (code == 0) return; // キャンセルされたら何もしない
+			// 撮影が完了したらコメントを求める
+			var comment = prompt("写真につけるコメントを入力");
+			droid.saveText(fname + ".txt", comment);
+		}
+	);
+}
+function showDiary() { // 記録を見る
+	var html = "";
+	var list = droid.fileList(savedir); // ファイル一覧を列挙
+	list.sort(); // 並び替える
+	for (var i in list) { // ファイルを一つずつ処理する
+		var fname = list[i];
+		if (fname.match(/jpeg$/)) { // JPEGファイルなら<img>を追加
+			html += "<img src='file://" + savedir + fname + "'/><br/>";
+		}
+		if (fname.match(/txt$/)) { // テキストファイルなら内容を追加
+			var s = droid.loadText(savedir + fname);
+			html += "<div>" + s + "</div>";
+		}
+	}
+	$("disp").innerHTML = "<h2>記録一覧</h2>" + html;
+}
+</script>
+</head><body>
+	<h1>写真日記</h1>
+	<button onclick="takePicture()">写真を撮影する</button><br/>
+	<button onclick="showDiary()">記録を見る</button>
+	<div id="disp"></div>
+</body></html>
